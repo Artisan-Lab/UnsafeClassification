@@ -1,8 +1,5 @@
-Owning
 dereferenceable
-Deferred initialization
 consecutive
-UTF-8
 overlap
 
 # ControlFlow
@@ -76,15 +73,15 @@ where
 ```
 ---- 
 
-### Valid Numerical Value - _CONVERT_
+### Valid Numerical Value - _Encode_
 ```rust
-pub trait FloatToInt<Int>: private::Sealed + Sized {
-    unsafe fn to_int_unchecked(self) -> Int;
-}
+impl String {}
+pub unsafe fn as_mut_vec(&mut self) -> &mut Vec<u8, Global> {}
+// UTF-8
 ```
----- 
+----
 
-### In Bound (Range)
+### In Bound
 ```rust
 impl<T, const N: usize> IntoIter<T, N> {}
  pub const unsafe fn new_unchecked(buffer: [MaybeUninit<T>; N], initialized: Range<usize>) -> Self {}
@@ -168,6 +165,18 @@ pub const unsafe fn assume_init(self) -> T {}
 pub unsafe fn zeroed<T>() -> T {}
 ```
 ---- 
+
+### Orphan Object
+```rust
+impl CString {}
+pub fn into_raw(self) -> *mut c_char {}
+```
+
+```rust
+impl<T: ?Sized, A: Allocator> Box<T, A> {}
+pub fn into_raw(b: Self) -> *mut T {}
+```
+----
 
 ### Termination
 ```rust
