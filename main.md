@@ -8,9 +8,9 @@ overlap
 pub const unsafe fn unreachable_unchecked() -> ! {}
 ```
 
-## Pre Condition
-
-### Valid Numerical Value - _ABSOLUTE_
+# Pre Condition
+## Numeric
+### ABSOLUTE Value
 ```rust
 // transmute
 pub const unsafe fn from_u32_unchecked(i: u32) -> char
@@ -41,7 +41,7 @@ where
 ```
 ---- 
 
-### Valid Numerical Value - _INDIRECT_
+### INDIRECT Bound
 ```rust
 unsafe fn shrink(&self, ptr: NonNull<u8>, old_layout: Layout, new_layout: Layout) -> Result<NonNull<[u8]>, AllocError> {}
 // new_layout.size() <= old_layout.size
@@ -71,17 +71,7 @@ where
     unsafe { try_collect_into_array(iter).unwrap_unchecked() }
 }
 ```
----- 
 
-### Valid Numerical Value - _Encode_
-```rust
-impl String {}
-pub unsafe fn as_mut_vec(&mut self) -> &mut Vec<u8, Global> {}
-// UTF-8
-```
-----
-
-### In Bound
 ```rust
 impl<T, const N: usize> IntoIter<T, N> {}
  pub const unsafe fn new_unchecked(buffer: [MaybeUninit<T>; N], initialized: Range<usize>) -> Self {}
@@ -94,6 +84,21 @@ unsafe fn forward_unchecked(start: Self, count: usize) -> Self {}
 ```
 ---- 
 
+### Encode / Format
+```rust
+impl String {}
+pub unsafe fn as_mut_vec(&mut self) -> &mut Vec<u8, Global> {}
+// UTF-8
+```
+
+```rust
+impl CStr {}
+pub unsafe fn from_ptr<'a>(ptr: *const c_char) -> &'a CStr {}
+// CString
+```
+----
+
+## Pointer
 ### Consistency
 ```rust
 impl dyn Any {} // downcast
@@ -109,7 +114,40 @@ unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout);
 impl<T> MaybeUninit<T> {}
 pub unsafe fn assume_init_drop(&mut self) {}
 ```
----- 
+----
+
+## Ownership
+
+### Orphan Object
+```rust
+impl CString {}
+pub fn into_raw(self) -> *mut c_char {}
+```
+
+```rust
+impl<T: ?Sized, A: Allocator> Box<T, A> {}
+pub fn into_raw(b: Self) -> *mut T {}
+```
+----
+
+### Initialization
+```rust
+impl<T, const N: usize> IntoIter<T, N> {}
+pub const unsafe fn new_unchecked(buffer: [MaybeUninit<T>; N], initialized: Range<usize>) -> Self {}
+```
+
+```rust
+impl<T> MaybeUninit<T> {}
+pub const unsafe fn assume_init(self) -> T {}
+```
+
+```rust
+// zeroed
+pub unsafe fn zeroed<T>() -> T {}
+```
+----
+
+## Mutation & Lifetime
 
 ### Borrow Mutation
 ```rust
@@ -135,6 +173,22 @@ pub const unsafe fn as_uninit_slice<'a>(self) -> Option<&'a [MaybeUninit<T>]> {}
 ```
 ---- 
 
+### Extending/Shortening Lifetime
+```rust
+struct R<'a>(&'a i32);
+unsafe fn extend_lifetime<'b>(r: R<'b>) -> R<'static> {
+    std::mem::transmute::<R<'b>, R<'static>>(r)
+}
+
+unsafe fn shorten_invariant_lifetime<'b, 'c>(r: &'b mut R<'static>)
+                                             -> &'b mut R<'c> {
+    std::mem::transmute::<&'b mut R<'static>, &'b mut R<'c>>(r)
+}
+```
+----
+
+## Pointer
+
 ### Non-null
 ```rust
 impl<T: ?Sized> Unique<T> {}
@@ -142,48 +196,24 @@ pub const unsafe fn new_unchecked(ptr: *mut T) -> Self {}
 ```
 ---- 
 
-### Align
+### Size
+```rust
+pub const unsafe extern "rust-intrinsic" fn transmute<Src, Dst>(
+    src: Src
+) -> Dst {}
+```
+----
+
+### Alignment
 ```rust
 pub(crate) trait ByteSlice: AsRef<[u8]> {}
 unsafe fn first_unchecked(&self) -> u8 {}
 ```
----- 
-
-### Initialization
-```rust
-impl<T, const N: usize> IntoIter<T, N> {}
-pub const unsafe fn new_unchecked(buffer: [MaybeUninit<T>; N], initialized: Range<usize>) -> Self {}
-```
-
-```rust
-impl<T> MaybeUninit<T> {}
-pub const unsafe fn assume_init(self) -> T {}
-```
-
-```rust
-// zeroed
-pub unsafe fn zeroed<T>() -> T {}
-```
----- 
-
-### Orphan Object
-```rust
-impl CString {}
-pub fn into_raw(self) -> *mut c_char {}
-```
-
-```rust
-impl<T: ?Sized, A: Allocator> Box<T, A> {}
-pub fn into_raw(b: Self) -> *mut T {}
-```
 ----
 
-### Termination
-```rust
-impl CStr {}
-pub unsafe fn from_ptr<'a>(ptr: *const c_char) -> &'a CStr {}
-```
----- 
+### Deferencable
+
+----
 
 ### Exotically Sized Types
 ```rust
@@ -196,18 +226,16 @@ unsafe fn alloc(&self, layout: Layout) -> *mut u8;
 // the size of the entire value (dynamic tail length + statically sized prefix) must fit in isize.
 pub const unsafe fn size_of_val_raw<T: ?Sized>(val: *const T) -> usize {}
 ```
----- 
+----
 
-## Post Condition
+# Post Condition
 
-### Usage
+## Usage
 ```rust
 impl<T> ManuallyDrop<T> {}
 pub unsafe fn take(slot: &mut ManuallyDrop<T>) -> T {}
 pub const unsafe fn assume_init_read(&self) -> T {}
 ```
-
-
 ## OS
 ### Single Allocated Object
 ```rust
