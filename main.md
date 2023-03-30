@@ -1,4 +1,3 @@
-dereferenceable
 consecutive
 overlap
 
@@ -211,8 +210,19 @@ unsafe fn first_unchecked(&self) -> u8 {}
 ```
 ----
 
-### Deferencable
+### Dereference
+```rust
+// the memory range of the given size starting at the pointer
+// must all be within the bounds of a single allocated object.
+// Note that in Rust, every (stack-allocated) variable is considered a separate allocated object.
+```
 
+```rust
+impl<T: ?Sized> *const T {}
+pub const unsafe fn offset_from(self, origin: *const T) -> isize
+    where
+        T: Sized {}
+```
 ----
 
 ### Exotically Sized Types
@@ -230,18 +240,9 @@ pub const unsafe fn size_of_val_raw<T: ?Sized>(val: *const T) -> usize {}
 
 # Post Condition
 
-## Usage
+## Owner Taking
 ```rust
 impl<T> ManuallyDrop<T> {}
 pub unsafe fn take(slot: &mut ManuallyDrop<T>) -> T {}
 pub const unsafe fn assume_init_read(&self) -> T {}
 ```
-## OS
-### Single Allocated Object
-```rust
-impl<T: ?Sized> *const T {}
-pub const unsafe fn offset_from(self, origin: *const T) -> isize
-    where
-        T: Sized {}
-```
-### Same Allocator
