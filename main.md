@@ -1,5 +1,6 @@
-consecutive
-overlap
+ todo!: consecutive overlap
+ 
+ todo!: transmute
 
 # ControlFlow
 ## Reachable
@@ -146,46 +147,6 @@ pub unsafe fn zeroed<T>() -> T {}
 ```
 ----
 
-## Mutation & Lifetime
-
-### Borrow Mutation
-```rust
-impl CStr {}
-pub unsafe fn from_ptr<'a>(ptr: *const c_char) -> &'a CStr {}
-```
-
-```rust
-impl<T: ?Sized> RefCell<T> {}
-pub unsafe fn try_borrow_unguarded(&self) -> Result<&T, BorrowError> {}
-```
----- 
-
-### Arbitrarily Lifetime
-```rust
-impl<T: ?Sized> *const T {}
-pub const unsafe fn as_ref<'a>(self) -> Option<&'a T> {}
-```
-
-```rust
-impl<T> *const [T] {}
-pub const unsafe fn as_uninit_slice<'a>(self) -> Option<&'a [MaybeUninit<T>]> {}
-```
----- 
-
-### Extending/Shortening Lifetime
-```rust
-struct R<'a>(&'a i32);
-unsafe fn extend_lifetime<'b>(r: R<'b>) -> R<'static> {
-    std::mem::transmute::<R<'b>, R<'static>>(r)
-}
-
-unsafe fn shorten_invariant_lifetime<'b, 'c>(r: &'b mut R<'static>)
-                                             -> &'b mut R<'c> {
-    std::mem::transmute::<&'b mut R<'static>, &'b mut R<'c>>(r)
-}
-```
-----
-
 ## Pointer
 
 ### Non-null
@@ -240,9 +201,49 @@ pub const unsafe fn size_of_val_raw<T: ?Sized>(val: *const T) -> usize {}
 
 # Post Condition
 
-## Owner Taking
+## Ownership
 ```rust
 impl<T> ManuallyDrop<T> {}
 pub unsafe fn take(slot: &mut ManuallyDrop<T>) -> T {}
 pub const unsafe fn assume_init_read(&self) -> T {}
 ```
+
+## Mutation & Lifetime
+
+### Borrow Mutation
+```rust
+impl CStr {}
+pub unsafe fn from_ptr<'a>(ptr: *const c_char) -> &'a CStr {}
+```
+
+```rust
+impl<T: ?Sized> RefCell<T> {}
+pub unsafe fn try_borrow_unguarded(&self) -> Result<&T, BorrowError> {}
+```
+---- 
+
+### Arbitrarily Lifetime
+```rust
+impl<T: ?Sized> *const T {}
+pub const unsafe fn as_ref<'a>(self) -> Option<&'a T> {}
+```
+
+```rust
+impl<T> *const [T] {}
+pub const unsafe fn as_uninit_slice<'a>(self) -> Option<&'a [MaybeUninit<T>]> {}
+```
+---- 
+
+### Extending/Shortening Lifetime
+```rust
+struct R<'a>(&'a i32);
+unsafe fn extend_lifetime<'b>(r: R<'b>) -> R<'static> {
+    std::mem::transmute::<R<'b>, R<'static>>(r)
+}
+
+unsafe fn shorten_invariant_lifetime<'b, 'c>(r: &'b mut R<'static>)
+                                             -> &'b mut R<'c> {
+    std::mem::transmute::<&'b mut R<'static>, &'b mut R<'c>>(r)
+}
+```
+----
